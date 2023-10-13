@@ -23,7 +23,6 @@ use cs2_schema_generated::cs2::client::{
     C_CSPlayerPawn,
 };
 use obfstr::obfstr;
-
 use super::Enhancement;
 use crate::{
     settings::{
@@ -509,6 +508,34 @@ impl Enhancement for PlayerESP {
                         .build();
                 }
             }
+            if settings.show_crosshair {
+                let crosshair_size = 10.0;  // Defina o tamanho do crosshair como desejado
+                
+                 // Obtenha o tamanho da janela
+                let window_size = [view.screen_bounds.x, view.screen_bounds.y];
+            
+                // Calcule o centro da tela
+                let center_x = window_size[0] / 2.0;
+                let center_y = window_size[1] / 2.0;
+            
+                // Desenhe as linhas verticais e horizontais do crosshair
+                draw.add_line(
+                    [center_x - crosshair_size, center_y],
+                    [center_x + crosshair_size, center_y],
+                    *esp_color,
+                )
+                .thickness(1.0)
+                .build();
+            
+                draw.add_line(
+                    [center_x, center_y - crosshair_size],
+                    [center_x, center_y + crosshair_size],
+                    *esp_color,
+                )
+                .thickness(1.0)
+                .build();
+            }                       
         }
     }
 }
+

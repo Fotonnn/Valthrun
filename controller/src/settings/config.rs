@@ -59,11 +59,32 @@ fn default_esp_health_bar_size() -> f32 {
 fn default_esp_line_position() -> LineStartPosition {
     LineStartPosition::Center
 }
-
+fn default_radar_range() -> f32 {
+    150.0
+}
+fn default_radar_point_size_proportion() -> f32 {
+    1.0
+}
+fn default_radar_crossline_color() -> [f32; 4] {
+    [0.8627, 0.8627, 0.8627, 1.0]
+}
+fn default_radar_type() -> RadarType {
+    RadarType::Arrow
+}
+fn default_radar_proportion() -> f32 {
+    2230.0
+}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq, PartialOrd)]
 pub enum EspBoxType {
     Box2D,
     Box3D,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq, PartialOrd)]
+pub enum RadarType {
+    Circle,
+    Arrow,
+    CircleWithArrow,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq, PartialOrd)]
@@ -126,6 +147,9 @@ pub struct AppSettings {
 
     #[serde(default = "bool_true")]
     pub bomb_timer: bool,
+
+    #[serde(default = "bool_false")]
+    pub show_crosshair: bool,
 
     #[serde(default = "bool_false")]
     pub spectators_list: bool,

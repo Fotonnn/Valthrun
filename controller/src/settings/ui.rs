@@ -14,6 +14,7 @@ use crate::{
         AppSettings,
         EspBoxType,
         LineStartPosition,
+        RadarType,
     },
     utils::ImGuiKey,
     Application,
@@ -209,6 +210,7 @@ impl SettingsUI {
 
                     if let Some(_) = ui.tab_item("Misc") {
                         ui.checkbox(obfstr!("Valthrun Watermark"), &mut settings.valthrun_watermark);
+                        ui.checkbox(obfstr!("Crosshair"), &mut settings.show_crosshair);
 
                         if ui.checkbox(obfstr!("Hide overlay from screen capture"), &mut settings.hide_overlay_from_screen_capture) {
                             app.settings_screen_capture_changed.store(true, Ordering::Relaxed);
@@ -217,7 +219,7 @@ impl SettingsUI {
                         if ui.checkbox(obfstr!("Show render debug overlay"), &mut settings.render_debug_window) {
                             app.settings_render_debug_window_changed.store(true, Ordering::Relaxed);
                         }
-                    }
+                    }             
                 }
             });
     }
