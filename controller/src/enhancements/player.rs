@@ -100,7 +100,7 @@ impl CModelStateEx for CModelState {
 pub struct PlayerESP {
     players: Vec<PlayerInfo>,
     local_team_id: u8,
-    local_pos: nalgebra::Vector3<f32>,
+    local_pos: Option<nalgebra::Vector3<f32>>,
 }
 
 impl PlayerESP {
@@ -276,7 +276,7 @@ impl Enhancement for PlayerESP {
             .read_schema()?;
 
         let localpos = nalgebra::Vector3::<f32>::from_column_slice(&local_pawn.m_vOldOrigin()?);
-        self.local_pos = localpos;
+        self.local_pos = Some(localpos);
 
         let observice_entity_handle = if local_player_controller.m_bPawnIsAlive()? {
             local_player_controller.m_hPawn()?.get_entity_index()
@@ -338,6 +338,14 @@ impl Enhancement for PlayerESP {
     fn render(&self, settings: &AppSettings, ui: &imgui::Ui, view: &ViewController) {
         let draw = ui.get_window_draw_list();
         for entry in self.players.iter() {
+            if settings.near_players_only {
+                if let Some(local_pos) = self.local_pos {
+                    let distance = (entry.position - local_pos).norm();
+                    if distance >= settings.max_distance {
+                        continue;
+                    }
+                }
+            }
             let esp_color = if entry.team_id == self.local_team_id {
                 if !settings.esp_enabled_team {
                     continue;
@@ -461,7 +469,7 @@ impl Enhancement for PlayerESP {
                 }
             }
 
-            if settings.esp_info_health || settings.esp_info_weapon || settings.esp_info_kit {
+            if settings.esp_info_health || settings.esp_info_weapon || settings.esp_info_kit || settings.esp_info_distance {
                 if let Some(pos) = view.world_to_screen(&entry.position, false) {
                     let entry_height = entry.calculate_screen_height(view).unwrap_or(100.0);
                     let target_scale = entry_height * 15.0 / view.screen_bounds.y;
@@ -502,7 +510,22 @@ impl Enhancement for PlayerESP {
                         pos.y += y_offset;
                         draw.add_text(pos, esp_color.clone(), text);
 
-                        //y_offset += ui.text_line_height_with_spacing() * target_scale;
+                        y_offset += ui.text_line_height_with_spacing() * target_scale;
+                    }
+
+                    if settings.esp_info_distance {
+                            if let Some(local_pos) = self.local_pos {
+                                let distance = (entry.position - local_pos).norm();
+        
+                                let text = format!("[{:.0}m]", distance);
+                                let [text_width, _] = ui.calc_text_size(&text);
+        
+                                let mut pos = pos.clone();
+                                pos.x -= text_width / 2.0;
+                                pos.y += y_offset;
+                                draw.add_text(pos, *esp_color, text);
+                                //y_offset += ui.text_line_height_with_spacing() * target_scale;
+                            }                    
                     }
 
                     ui.set_window_font_scale(1.0);
@@ -524,31 +547,6 @@ impl Enhancement for PlayerESP {
                     draw.add_line(start_pos, player_screen_pos, *esp_color)
                         .thickness(1.0)
                         .build();
-                }
-            }
-            if settings.esp_distance {
-                if let Some(pos) = view.world_to_screen(&entry.position, false) {
-                    let dx = entry.position.x - self.local_pos.x;
-                    let dy = entry.position.y - self.local_pos.y;
-                    let dz = entry.position.z - self.local_pos.z;
-
-                    let distance = (dx * dx + dy * dy + dz * dz).sqrt();
-                    let entry_height = entry.calculate_screen_height(view).unwrap_or(100.0);
-                    let target_scale = entry_height * 15.0 / view.screen_bounds.y;
-                    let target_scale = target_scale.clamp(0.5, 1.25);
-                    ui.set_window_font_scale(target_scale);
-
-                    let mut y_offset = 0.0;
-
-                    let text = format!("Dist: {:.0}m", distance);
-                    let [text_width, _] = ui.calc_text_size(&text);
-
-                    let mut pos = pos.clone();
-                    pos.x -= text_width / 2.0;
-                    pos.y += y_offset + 15.0;
-                    draw.add_text(pos, *esp_color, text);
-
-                    ui.set_window_font_scale(1.0);
                 }
             }
         }

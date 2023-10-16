@@ -59,6 +59,9 @@ fn default_esp_health_bar_size() -> f32 {
 fn default_esp_line_position() -> LineStartPosition {
     LineStartPosition::Center
 }
+fn default_distance_max() -> f32 {
+    1000.0
+}
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq, PartialOrd)]
 pub enum EspBoxType {
@@ -104,6 +107,12 @@ pub struct AppSettings {
     pub esp_boxes_thickness: f32,
 
     #[serde(default = "bool_false")]
+    pub near_players_only: bool,
+
+    #[serde(default = "default_distance_max")]
+    pub max_distance: f32,
+
+    #[serde(default = "bool_false")]
     pub esp_health_bar: bool,
 
     #[serde(default = "default_esp_health_bar_size")]
@@ -128,7 +137,7 @@ pub struct AppSettings {
     pub esp_lines_position: LineStartPosition,
 
     #[serde(default = "bool_false")]
-    pub esp_distance: bool,
+    pub esp_info_distance: bool,
 
     #[serde(default = "bool_true")]
     pub bomb_timer: bool,

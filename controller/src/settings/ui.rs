@@ -101,6 +101,12 @@ impl SettingsUI {
                                 ui.same_line();
                                 ui.slider_config(obfstr!("Thickness"), 0.1, 10.0)
                                     .build(&mut settings.esp_boxes_thickness);
+                                ui.checkbox(obfstr!("Near players only"), &mut settings.near_players_only);
+                                if settings.near_players_only {
+                                ui.same_line();
+                                ui.slider_config(obfstr!("Max Distance"), 500.0, 3000.0)
+                                    .build(&mut settings.max_distance);
+                                }
                             }
                             if settings.esp_box_type == EspBoxType::Box2D {
                                 ui.checkbox(obfstr!("2DBOX: Show Health Bar"), &mut settings.esp_health_bar);
@@ -119,7 +125,7 @@ impl SettingsUI {
 
                             ui.checkbox(obfstr!("Show player health"), &mut settings.esp_info_health);
                             ui.checkbox(obfstr!("Show player weapon"), &mut settings.esp_info_weapon);
-                            ui.checkbox(obfstr!("Show distance"), &mut settings.esp_distance);
+                            ui.checkbox(obfstr!("Show distance"), &mut settings.esp_info_distance);
                             ui.checkbox(obfstr!("Display if player has kit"), &mut settings.esp_info_kit);
                             ui.checkbox(obfstr!("Show lines"), &mut settings.esp_lines);
                             if settings.esp_lines {
