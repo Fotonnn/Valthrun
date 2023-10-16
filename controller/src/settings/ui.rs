@@ -119,6 +119,7 @@ impl SettingsUI {
 
                             ui.checkbox(obfstr!("Show player health"), &mut settings.esp_info_health);
                             ui.checkbox(obfstr!("Show player weapon"), &mut settings.esp_info_weapon);
+                            ui.checkbox(obfstr!("Show distance"), &mut settings.esp_distance);
                             ui.checkbox(obfstr!("Display if player has kit"), &mut settings.esp_info_kit);
                             ui.checkbox(obfstr!("Show lines"), &mut settings.esp_lines);
                             if settings.esp_lines {

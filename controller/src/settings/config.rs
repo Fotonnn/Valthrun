@@ -127,6 +127,9 @@ pub struct AppSettings {
     #[serde(default = "default_esp_line_position")]
     pub esp_lines_position: LineStartPosition,
 
+    #[serde(default = "bool_false")]
+    pub esp_distance: bool,
+
     #[serde(default = "bool_true")]
     pub bomb_timer: bool,
 
