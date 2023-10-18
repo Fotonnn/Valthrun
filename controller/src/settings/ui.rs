@@ -81,6 +81,12 @@ impl SettingsUI {
                         ui.checkbox(obfstr!("ESP"), &mut settings.esp);
 
                         if settings.esp {
+                            ui.checkbox(obfstr!("Near players only"), &mut settings.near_players_only);
+                            ui.checkbox(obfstr!("Change ESP color by distance"), &mut settings.color_change_by_distance);
+                            if settings.near_players_only || settings.color_change_by_distance {
+                                ui.slider_config(obfstr!("Max Distance"), 150.0, 5000.0)
+                                    .build(&mut settings.max_distance);
+                                }
                             ui.checkbox(obfstr!("ESP Boxes"), &mut settings.esp_boxes);
                             if settings.esp_boxes {
                                 ui.set_next_item_width(120.0);
@@ -101,12 +107,6 @@ impl SettingsUI {
                                 ui.same_line();
                                 ui.slider_config(obfstr!("Thickness"), 0.1, 10.0)
                                     .build(&mut settings.esp_boxes_thickness);
-                                ui.checkbox(obfstr!("Near players only"), &mut settings.near_players_only);
-                                if settings.near_players_only {
-                                ui.same_line();
-                                ui.slider_config(obfstr!("Max Distance"), 500.0, 3000.0)
-                                    .build(&mut settings.max_distance);
-                                }
                             }
                             if settings.esp_box_type == EspBoxType::Box2D {
                                 ui.checkbox(obfstr!("2DBOX: Show Health Bar"), &mut settings.esp_health_bar);

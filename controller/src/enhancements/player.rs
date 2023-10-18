@@ -217,6 +217,30 @@ impl PlayerESP {
 
         [r, g, b, alpha]
     }
+
+    pub fn calculate_esp_color(&self, entry: &PlayerInfo, settings: &AppSettings,) -> [f32; 4] {
+        if let Some(local_pos) = self.local_pos {
+            let distance = (entry.position - local_pos).norm();
+            let max_distance = settings.max_distance;
+            let min_distance = 100.0;
+    
+            let color_near = [1.0, 0.0, 0.0, 0.75]; 
+            let color_far = [0.0, 1.0, 0.0, 0.75];  
+    
+            let t = (distance - min_distance) / (max_distance - min_distance);
+            let t = t.clamp(0.0, 1.0);
+    
+            [
+                color_near[0] + t * (color_far[0] - color_near[0]),
+                color_near[1] + t * (color_far[1] - color_near[1]),
+                color_near[2] + t * (color_far[2] - color_near[2]),
+                0.75,
+            ]
+        } else {
+            // if not available
+            [1.0, 1.0, 1.0, 1.0]
+        }
+    }
 }
 
 const HEALTH_BAR_MAX_HEALTH: f32 = 100.0;
@@ -263,21 +287,6 @@ impl Enhancement for PlayerESP {
             }
         };
 
-        let local_controller = ctx.cs2_entities.get_local_player_controller()?;
-        if local_controller.is_null()? {
-            return Ok(());
-        }
-
-        let local_pawn = ctx
-            .cs2_entities
-            .get_by_handle(&local_controller.reference_schema()?.m_hPlayerPawn()?)?
-            .context("missing local player pawn")?
-            .entity()?
-            .read_schema()?;
-
-        let localpos = nalgebra::Vector3::<f32>::from_column_slice(&local_pawn.m_vOldOrigin()?);
-        self.local_pos = Some(localpos);
-
         let observice_entity_handle = if local_player_controller.m_bPawnIsAlive()? {
             local_player_controller.m_hPawn()?.get_entity_index()
         } else {
@@ -301,9 +310,12 @@ impl Enhancement for PlayerESP {
 
         self.local_team_id = local_player_controller.m_iPendingTeamNum()?;
 
-        for entity_identity in ctx.cs2_entities.all_identities() {
+        for entity_identity in ctx.cs2_entities.all_identities() {       
             if entity_identity.handle::<()>()?.get_entity_index() == observice_entity_handle {
                 /* current pawn we control/observe */
+                let local_pawn = entity_identity.entity_ptr::<C_CSPlayerPawn>()?.read_schema()?;
+                let local_pos = nalgebra::Vector3::<f32>::from_column_slice(&local_pawn.m_vOldOrigin()?);
+                self.local_pos = Some(local_pos);
                 continue;
             }
 
@@ -346,18 +358,20 @@ impl Enhancement for PlayerESP {
                     }
                 }
             }
-            let esp_color = if entry.team_id == self.local_team_id {
-                if !settings.esp_enabled_team {
-                    continue;
-                }
-
-                &settings.esp_color_team
+            let esp_color = if settings.color_change_by_distance {
+                self.calculate_esp_color(entry, settings)
             } else {
-                if !settings.esp_enabled_enemy {
-                    continue;
+                *if entry.team_id == self.local_team_id {
+                    if !settings.esp_enabled_team {
+                        continue;
+                    }
+                    &settings.esp_color_team
+                } else {
+                    if !settings.esp_enabled_enemy {
+                        continue;
+                    }
+                    &settings.esp_color_enemy
                 }
-
-                &settings.esp_color_enemy
             };
 
             if settings.esp_skeleton {
@@ -385,7 +399,7 @@ impl Enhancement for PlayerESP {
                         None => continue,
                     };
 
-                    draw.add_line(parent_position, bone_position, *esp_color)
+                    draw.add_line(parent_position, bone_position, esp_color)
                         .thickness(settings.esp_skeleton_thickness)
                         .build();
                 }
@@ -398,7 +412,7 @@ impl Enhancement for PlayerESP {
                             &(entry.model.vhull_min + entry.position),
                             &(entry.model.vhull_max + entry.position),
                         ) {
-                            draw.add_rect([vmin.x, vmin.y], [vmax.x, vmax.y], *esp_color)
+                            draw.add_rect([vmin.x, vmin.y], [vmax.x, vmax.y], esp_color)
                                 .thickness(settings.esp_boxes_thickness)
                                 .build();
 
@@ -462,7 +476,7 @@ impl Enhancement for PlayerESP {
                             &draw,
                             &(entry.model.vhull_min + entry.position),
                             &(entry.model.vhull_max + entry.position),
-                            (*esp_color).into(),
+                            (esp_color).into(),
                             settings.esp_boxes_thickness,
                         );
                     }
@@ -527,7 +541,7 @@ impl Enhancement for PlayerESP {
                             let mut pos = pos.clone();
                             pos.x -= text_width / 2.0;
                             pos.y += y_offset;
-                            draw.add_text(pos, *esp_color, text);
+                            draw.add_text(pos, esp_color, text);
                             //y_offset += ui.text_line_height_with_spacing() * target_scale;
                         }
                     }
@@ -548,7 +562,7 @@ impl Enhancement for PlayerESP {
                         LineStartPosition::BottomCenter => [screen_size[0] / 2.0, screen_size[1]],
                         LineStartPosition::BottomRight => [screen_size[0], screen_size[1]],
                     };
-                    draw.add_line(start_pos, player_screen_pos, *esp_color)
+                    draw.add_line(start_pos, player_screen_pos, esp_color)
                         .thickness(1.0)
                         .build();
                 }
