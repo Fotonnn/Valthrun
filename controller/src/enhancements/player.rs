@@ -35,6 +35,7 @@ use crate::{
     weapon::WeaponId,
 };
 
+
 pub struct PlayerInfo {
     pub controller_entity_id: u32,
     pub team_id: u8,
@@ -245,6 +246,7 @@ impl PlayerESP {
 
 const HEALTH_BAR_MAX_HEALTH: f32 = 100.0;
 const HEALTH_BAR_BORDER_WIDTH: f32 = 1.0;
+const UNITS_TO_METERS: f32 = 0.3048;
 impl Enhancement for PlayerESP {
     fn update_settings(
         &mut self,
@@ -270,7 +272,7 @@ impl Enhancement for PlayerESP {
         if !ctx.settings.esp || !(ctx.settings.esp_boxes || ctx.settings.esp_skeleton) {
             return Ok(());
         }
-
+        
         self.players.reserve(16);
 
         let local_player_controller = ctx
@@ -352,7 +354,7 @@ impl Enhancement for PlayerESP {
         for entry in self.players.iter() {
             if settings.near_players_only {
                 if let Some(local_pos) = self.local_pos {
-                    let distance = (entry.position - local_pos).norm();
+                    let distance = (entry.position - local_pos).norm() * UNITS_TO_METERS;
                     if distance >= settings.max_distance {
                         continue;
                     }
@@ -533,7 +535,7 @@ impl Enhancement for PlayerESP {
 
                     if settings.esp_info_distance {
                         if let Some(local_pos) = self.local_pos {
-                            let distance = (entry.position - local_pos).norm();
+                            let distance = (entry.position - local_pos).norm() * UNITS_TO_METERS;
 
                             let text = format!("[{:.0}m]", distance);
                             let [text_width, _] = ui.calc_text_size(&text);

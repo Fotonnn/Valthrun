@@ -84,7 +84,7 @@ impl SettingsUI {
                             ui.checkbox(obfstr!("Near players only"), &mut settings.near_players_only);
                             ui.checkbox(obfstr!("Change ESP color by distance"), &mut settings.color_change_by_distance);
                             if settings.near_players_only || settings.color_change_by_distance {
-                                ui.slider_config(obfstr!("Max Distance"), 150.0, 5000.0)
+                                ui.slider_config(obfstr!("Max Distance"), 150.0, 10000.0)
                                     .build(&mut settings.max_distance);
                                 }
                             ui.checkbox(obfstr!("ESP Boxes"), &mut settings.esp_boxes);
