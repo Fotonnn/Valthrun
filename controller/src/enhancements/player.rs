@@ -35,7 +35,6 @@ use crate::{
     weapon::WeaponId,
 };
 
-
 pub struct PlayerInfo {
     pub controller_entity_id: u32,
     pub team_id: u8,
@@ -219,18 +218,18 @@ impl PlayerESP {
         [r, g, b, alpha]
     }
 
-    pub fn calculate_esp_color(&self, entry: &PlayerInfo, settings: &AppSettings,) -> [f32; 4] {
+    pub fn calculate_esp_color(&self, entry: &PlayerInfo, settings: &AppSettings) -> [f32; 4] {
         if let Some(local_pos) = self.local_pos {
             let distance = (entry.position - local_pos).norm();
             let max_distance = settings.max_distance;
             let min_distance = 100.0;
-    
-            let color_near = [1.0, 0.0, 0.0, 0.75]; 
-            let color_far = [0.0, 1.0, 0.0, 0.75];  
-    
+
+            let color_near = [1.0, 0.0, 0.0, 0.75];
+            let color_far = [0.0, 1.0, 0.0, 0.75];
+
             let t = (distance - min_distance) / (max_distance - min_distance);
             let t = t.clamp(0.0, 1.0);
-    
+
             [
                 color_near[0] + t * (color_far[0] - color_near[0]),
                 color_near[1] + t * (color_far[1] - color_near[1]),
@@ -272,7 +271,7 @@ impl Enhancement for PlayerESP {
         if !ctx.settings.esp || !(ctx.settings.esp_boxes || ctx.settings.esp_skeleton) {
             return Ok(());
         }
-        
+
         self.players.reserve(16);
 
         let local_player_controller = ctx
@@ -312,11 +311,14 @@ impl Enhancement for PlayerESP {
 
         self.local_team_id = local_player_controller.m_iPendingTeamNum()?;
 
-        for entity_identity in ctx.cs2_entities.all_identities() {       
+        for entity_identity in ctx.cs2_entities.all_identities() {
             if entity_identity.handle::<()>()?.get_entity_index() == observice_entity_handle {
                 /* current pawn we control/observe */
-                let local_pawn = entity_identity.entity_ptr::<C_CSPlayerPawn>()?.read_schema()?;
-                let local_pos = nalgebra::Vector3::<f32>::from_column_slice(&local_pawn.m_vOldOrigin()?);
+                let local_pawn = entity_identity
+                    .entity_ptr::<C_CSPlayerPawn>()?
+                    .read_schema()?;
+                let local_pos =
+                    nalgebra::Vector3::<f32>::from_column_slice(&local_pawn.m_vOldOrigin()?);
                 self.local_pos = Some(local_pos);
                 continue;
             }
